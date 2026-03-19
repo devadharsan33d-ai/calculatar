@@ -1,0 +1,8 @@
+{
+  "name": "Hidden Vault Calculator",
+  "description": "A secure calculator vault app that hides private images, videos, and files behind a functional calculator interface.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

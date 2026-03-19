@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+[.][a-zA-Z]{2,}$");
+    }
+
+    // --- Connection Test ---
+    match /test/connection {
+      allow read: if isAuthenticated();
+    }
+
+    // --- User Config Rules ---
+    match /users/{userId}/config/{configId} {
+      function isValidConfig(data) {
+        return data.pin is string && data.pin.size() >= 4 && data.pin.size() <= 6 &&
+               isValidEmail(data.email) &&
+               data.uid == userId;
+      }
+
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+                    hasRequiredFields(['pin', 'email', 'uid']) &&
+                    isValidConfig(request.resource.data);
+      allow update: if isOwner(userId) && 
+                    hasRequiredFields(['pin', 'email', 'uid']) &&
+                    isValidConfig(request.resource.data);
+    }
+
+    // --- Vault Item Rules ---
+    match /users/{userId}/vault/{itemId} {
+      function isValidVaultItem(data) {
+        return data.name is string && data.name.size() > 0 && data.name.size() < 255 &&
+               data.type is string &&
+               data.data is string &&
+               data.uid == userId;
+      }
+
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+                    hasRequiredFields(['name', 'type', 'data', 'timestamp', 'uid']) &&
+                    isValidVaultItem(request.resource.data);
+      allow update: if isOwner(userId) && 
+                    hasRequiredFields(['name', 'type', 'data', 'timestamp', 'uid']) &&
+                    isValidVaultItem(request.resource.data);
+      allow delete: if isOwner(userId);
+    }
+
+    // --- Security Alert Rules ---
+    match /users/{userId}/alerts/{alertId} {
+      function isValidAlert(data) {
+        return data.type is string &&
+               data.uid == userId;
+      }
+
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+                    hasRequiredFields(['type', 'timestamp', 'uid']) &&
+                    isValidAlert(request.resource.data);
+    }
+  }
+}

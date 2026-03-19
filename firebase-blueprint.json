@@ -1,0 +1,54 @@
+{
+  "entities": {
+    "UserConfig": {
+      "title": "User Configuration",
+      "description": "Stores the secret PIN and recovery email for the vault.",
+      "type": "object",
+      "properties": {
+        "pin": { "type": "string", "description": "The secret PIN for the vault." },
+        "email": { "type": "string", "format": "email", "description": "The recovery email for alerts." },
+        "uid": { "type": "string", "description": "The user's unique ID." }
+      },
+      "required": ["pin", "email", "uid"]
+    },
+    "VaultItem": {
+      "title": "Vault Item",
+      "description": "Metadata for a hidden file in the vault.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the file." },
+        "type": { "type": "string", "description": "The MIME type of the file (image/video/file)." },
+        "data": { "type": "string", "description": "The base64 encoded data or a URL to the file." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the item was added." },
+        "uid": { "type": "string", "description": "The owner's unique ID." }
+      },
+      "required": ["name", "type", "data", "timestamp", "uid"]
+    },
+    "SecurityAlert": {
+      "title": "Security Alert",
+      "description": "Log of suspicious activity.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "description": "The type of alert (e.g., 'wrong_pin', 'file_deleted')." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the alert occurred." },
+        "details": { "type": "string", "description": "Additional details about the alert." },
+        "uid": { "type": "string", "description": "The user's unique ID." }
+      },
+      "required": ["type", "timestamp", "uid"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/config": {
+      "schema": "UserConfig",
+      "description": "User-specific configuration."
+    },
+    "/users/{userId}/vault": {
+      "schema": "VaultItem",
+      "description": "User's hidden files."
+    },
+    "/users/{userId}/alerts": {
+      "schema": "SecurityAlert",
+      "description": "User's security alerts."
+    }
+  }
+}
